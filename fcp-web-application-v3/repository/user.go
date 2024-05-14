@@ -20,7 +20,7 @@ func NewUserRepo(filebasedDb *filebased.Data) *userRepository {
 }
 
 func (r *userRepository) GetUserByEmail(email string) (model.User, error) {
-	return r.filebasedDb.GetUserByEmail(email)
+	return model.User{}, nil // TODO: replace this
 }
 
 func (r *userRepository) CreateUser(user model.User) (model.User, error) {
@@ -34,5 +34,5 @@ func (r *userRepository) CreateUser(user model.User) (model.User, error) {
 }
 
 func (r *userRepository) GetUserTaskCategory() ([]model.UserTaskCategory, error) {
-	return r.filebasedDb.GetUserTaskCategory()
+	return nil, nil // TODO: replace this
 }

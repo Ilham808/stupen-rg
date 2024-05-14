@@ -16,15 +16,12 @@ type UserService interface {
 }
 
 type userService struct {
-	userRepo repo.UserRepository
-	jwtKey   []byte
+	userRepo     repo.UserRepository
+	sessionsRepo repo.SessionRepository
 }
 
-func NewUserService(userRepository repo.UserRepository) UserService {
-	return &userService{
-		userRepository,
-		model.JwtKey,
-	}
+func NewUserService(userRepository repo.UserRepository, sessionsRepo repo.SessionRepository) UserService {
+	return &userService{userRepository, sessionsRepo}
 }
 
 func (s *userService) Register(user *model.User) (model.User, error) {
@@ -49,23 +46,45 @@ func (s *userService) Register(user *model.User) (model.User, error) {
 
 func (s *userService) Login(user *model.User) (token *string, err error) {
 	dbUser, err := s.userRepo.GetUserByEmail(user.Email)
-	if err != nil || dbUser.Email == "" || dbUser.ID == 0 {
-		return nil, errors.New("email not found")
+	if err != nil {
+		return nil, err
 	}
 
-	if dbUser.Password != user.Password {
-		return nil, errors.New("password not match")
+	if dbUser.Email == "" || dbUser.ID == 0 {
+		return nil, errors.New("user not found")
 	}
 
-	expirationTime := time.Now().Add(24 * time.Hour)
+	if user.Password != dbUser.Password {
+		return nil, errors.New("wrong email or password")
+	}
+
+	expirationTime := time.Now().Add(20 * time.Minute)
 	claims := &model.Claims{
-		UserID: dbUser.ID,
+		Email: dbUser.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
 
-	tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.jwtKey)
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := t.SignedString(model.JwtKey)
+	if err != nil {
+		return nil, err
+	}
+
+	session := model.Session{
+		Token:  tokenString,
+		Email:  user.Email,
+		Expiry: expirationTime,
+	}
+
+	_, err = s.sessionsRepo.SessionAvailEmail(session.Email)
+	if err != nil {
+		err = s.sessionsRepo.AddSessions(session)
+	} else {
+		err = s.sessionsRepo.UpdateSessions(session)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -74,5 +93,5 @@ func (s *userService) Login(user *model.User) (token *string, err error) {
 }
 
 func (s *userService) GetUserTaskCategory() ([]model.UserTaskCategory, error) {
-	return s.userRepo.GetUserTaskCategory()
+	return nil, nil // TODO: replace this
 }

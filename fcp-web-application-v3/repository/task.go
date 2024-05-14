@@ -7,7 +7,7 @@ import (
 
 type TaskRepository interface {
 	Store(task *model.Task) error
-	Update(task *model.Task) error
+	Update(taskID int, task *model.Task) error
 	Delete(id int) error
 	GetByID(id int) (*model.Task, error)
 	GetList() ([]model.Task, error)
@@ -30,36 +30,22 @@ func (t *taskRepository) Store(task *model.Task) error {
 	return nil
 }
 
-func (t *taskRepository) Update(task *model.Task) error {
-	t.filebased.UpdateTask(task.ID, *task)
-	return nil
+func (t *taskRepository) Update(taskID int, task *model.Task) error {
+	return nil // TODO: replace this
 }
 
 func (t *taskRepository) Delete(id int) error {
-	t.filebased.DeleteTask(id)
-	return nil
+	return nil // TODO: replace this
 }
 
 func (t *taskRepository) GetByID(id int) (*model.Task, error) {
-	task, err := t.filebased.GetTaskByID(id)
-	if err != nil {
-		return nil, err
-	}
-	return task, nil
+	return nil, nil // TODO: replace this
 }
 
 func (t *taskRepository) GetList() ([]model.Task, error) {
-	tasks, err := t.filebased.GetTasks()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
+	return nil, nil // TODO: replace this
 }
 
 func (t *taskRepository) GetTaskCategory(id int) ([]model.TaskCategory, error) {
-	category, _ := t.filebased.GetTaskListByCategory(id)
-
-	return category, nil
+	return nil, nil // TODO: replace this
 }

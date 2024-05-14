@@ -43,11 +43,55 @@ func (t *taskAPI) AddTask(c *gin.Context) {
 }
 
 func (t *taskAPI) UpdateTask(c *gin.Context) {
-	// TODO: answer here
+	var updateTask model.Task
+
+	taskID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{Error: "Invalid task ID"})
+		return
+	}
+
+	if err := c.ShouldBindJSON(&updateTask); err != nil {
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	task, err := t.taskService.GetByID(taskID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	task.Title = updateTask.Title
+	task.Deadline = updateTask.Deadline
+	task.Priority = updateTask.Priority
+	task.CategoryID = updateTask.CategoryID
+	task.Status = updateTask.Status
+
+	err = t.taskService.Update(task)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, model.SuccessResponse{Message: "update task success"})
 }
 
 func (t *taskAPI) DeleteTask(c *gin.Context) {
 	// TODO: answer here
+	taskID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{Error: "Invalid task ID"})
+		return
+	}
+
+	err = t.taskService.Delete(taskID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, model.SuccessResponse{Message: "delete task success"})
 }
 
 func (t *taskAPI) GetTaskByID(c *gin.Context) {
@@ -68,8 +112,29 @@ func (t *taskAPI) GetTaskByID(c *gin.Context) {
 
 func (t *taskAPI) GetTaskList(c *gin.Context) {
 	// TODO: answer here
+	tasks, err := t.taskService.GetList()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, tasks)
 }
 
 func (t *taskAPI) GetTaskListByCategory(c *gin.Context) {
 	// TODO: answer here
+	taskID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{Error: "Invalid task ID"})
+		return
+	}
+
+	tasks, err := t.taskService.GetTaskCategory(taskID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, tasks)
 }

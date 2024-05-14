@@ -3,6 +3,7 @@ package repository
 import (
 	"a21hc3NpZ25tZW50/db/filebased"
 	"a21hc3NpZ25tZW50/model"
+	"fmt"
 )
 
 type CategoryRepository interface {
@@ -27,13 +28,11 @@ func (c *categoryRepository) Store(Category *model.Category) error {
 }
 
 func (c *categoryRepository) Update(id int, category model.Category) error {
-	c.filebasedDb.UpdateCategory(id, category)
-	return nil
+	return nil // TODO: replace this
 }
 
 func (c *categoryRepository) Delete(id int) error {
-	c.filebasedDb.DeleteCategory(id)
-	return nil
+	return fmt.Errorf("not implement") // TODO: replace this
 }
 
 func (c *categoryRepository) GetByID(id int) (*model.Category, error) {
@@ -43,11 +42,5 @@ func (c *categoryRepository) GetByID(id int) (*model.Category, error) {
 }
 
 func (c *categoryRepository) GetList() ([]model.Category, error) {
-	categories, err := c.filebasedDb.GetCategories()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return categories, nil
+	return nil, nil // TODO: replace this
 }
