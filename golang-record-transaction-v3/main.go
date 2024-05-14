@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 )
 
 type Transaction struct {
@@ -13,43 +14,72 @@ type Transaction struct {
 }
 
 func RecordTransactions(path string, transactions []Transaction) error {
-	dailyTotals := make(map[string]int)
-
-	// Menghitung total income dan expense per tanggal
-	for _, t := range transactions {
-		dailyTotals[t.Date] += t.Amount
+	if len(transactions) == 0 {
+		return nil
 	}
 
-	// Membuka file untuk ditulis
+	sort.SliceStable(transactions, func(i, j int) bool {
+		if transactions[i].Date < transactions[j].Date {
+			return true
+		} else {
+			return false
+		}
+	})
+
+	lastDate := transactions[0].Date
+	money := 0
+	output := make([]string, 0)
+
+	for _, transaction := range transactions {
+		if transaction.Date == lastDate {
+			if transaction.Type == "income" {
+				money += transaction.Amount
+			} else {
+				money -= transaction.Amount
+			}
+		} else {
+			if money < 0 {
+				output = append(output, fmt.Sprintf("%s;expense;%d", lastDate, abs(money)))
+			} else {
+				output = append(output, fmt.Sprintf("%s;income;%d", lastDate, money))
+			}
+			money = 0
+
+			if transaction.Type == "income" {
+				money += transaction.Amount
+			} else {
+				money -= transaction.Amount
+			}
+
+			lastDate = transaction.Date
+		}
+	}
+
+	if money < 0 {
+		output = append(output, fmt.Sprintf("%s;expense;%d", lastDate, abs(money)))
+	} else {
+		output = append(output, fmt.Sprintf("%s;income;%d", lastDate, money))
+	}
+
 	file, err := os.Create(path)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	// Mengurutkan tanggal secara ascending
-	dates := make([]string, 0, len(dailyTotals))
-	for date := range dailyTotals {
-		dates = append(dates, date)
-	}
-	sort.Strings(dates)
-
-	// Menulis data transaksi ke file
-	for _, date := range dates {
-		// Tentukan jenis transaksi berdasarkan selisih total income dan total expense
-		transactionType := "expense"
-		if dailyTotals[date] > 0 {
-			transactionType = "income"
-		}
-
-		// Tulis ke file dengan format yang sesuai
-		_, err := fmt.Fprintf(file, "%s;%s;%d\n", date, transactionType, dailyTotals[date])
-		if err != nil {
-			return err
-		}
+	_, err = file.WriteString(strings.Join(output, "\n"))
+	if err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 func main() {
@@ -57,8 +87,8 @@ func main() {
 	var transactions = []Transaction{
 		{"01/01/2021", "income", 100000},
 		{"01/01/2021", "expense", 50000},
-		{"01/01/2021", "expense", 30000},
-		{"01/01/2021", "income", 20000},
+		{"02/01/2021", "expense", 30000},
+		{"02/01/2021", "income", 20000},
 	}
 
 	err := RecordTransactions("transactions.txt", transactions)
