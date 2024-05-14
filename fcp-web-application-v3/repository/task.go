@@ -31,21 +31,36 @@ func (t *taskRepository) Store(task *model.Task) error {
 }
 
 func (t *taskRepository) Update(taskID int, task *model.Task) error {
-	return nil // TODO: replace this
+	t.filebased.UpdateTask(taskID, *task)
+
+	return nil
 }
 
 func (t *taskRepository) Delete(id int) error {
-	return nil // TODO: replace this
+	t.filebased.DeleteTask(id)
+	return nil
 }
 
 func (t *taskRepository) GetByID(id int) (*model.Task, error) {
-	return nil, nil // TODO: replace this
+	task, err := t.filebased.GetTaskByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return task, nil
 }
 
 func (t *taskRepository) GetList() ([]model.Task, error) {
-	return nil, nil // TODO: replace this
+	tasks, err := t.filebased.GetTasks()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
 }
 
 func (t *taskRepository) GetTaskCategory(id int) ([]model.TaskCategory, error) {
-	return nil, nil // TODO: replace this
+	category, _ := t.filebased.GetTaskListByCategory(id)
+
+	return category, nil
 }

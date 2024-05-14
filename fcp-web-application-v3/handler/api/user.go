@@ -51,27 +51,40 @@ func (u *userAPI) Register(c *gin.Context) {
 }
 
 func (u *userAPI) Login(c *gin.Context) {
-	var user model.UserLogin
+	var userBind model.UserLogin
 
-	if err := c.BindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(&userBind); err != nil {
 		c.JSON(http.StatusBadRequest, model.NewErrorResponse("invalid decode json"))
 		return
 	}
 
-	if user.Email == "" || user.Password == "" {
+	if userBind.Email == "" || userBind.Password == "" {
 		c.JSON(http.StatusBadRequest, model.NewErrorResponse("login data is empty"))
 		return
 	}
 
-	_, err := u.userService.Login(&model.User{Email: user.Email, Password: user.Password})
+	var recordUser = model.User{
+		Email:    userBind.Email,
+		Password: userBind.Password,
+	}
+
+	token, err := u.userService.Login(&recordUser)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.NewErrorResponse("error internal server"))
+		c.JSON(http.StatusUnauthorized, model.NewErrorResponse(err.Error()))
 		return
 	}
 
+	c.SetCookie("session_token", *token, 3600, "/", "localhost", false, true)
 	c.JSON(http.StatusOK, model.NewSuccessResponse("login success"))
 }
 
 func (u *userAPI) GetUserTaskCategory(c *gin.Context) {
-	// TODO: answer here
+	lists, err := u.userService.GetUserTaskCategory()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.NewErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, lists)
 }
